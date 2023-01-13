@@ -11,6 +11,7 @@
     "pre-commit": "npm run lint && npm run format"
   },
   "dependencies": {
+    "localforage": "^1.10.0",
     "next": "^13.1.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
