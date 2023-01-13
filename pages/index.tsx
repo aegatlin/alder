@@ -1,29 +1,13 @@
-import localforage from 'localforage'
 import { useEffect, useState } from 'react'
 import { Button } from '../lib/core/Button'
 import { InputText } from '../lib/core/InputText'
-
-const List = {
-  async addItem(s: string) {
-    const list = await localforage.getItem<string[]>('list')
-    if (list) list.push(s)
-    await localforage.setItem('list', list)
-  },
-  async getList(): Promise<string[] | null> {
-    const list = await localforage.getItem<string[]>('list')
-    return list
-  },
-  async reset() {
-    await localforage.setItem('list', [])
-  },
-}
+import { ListApi, ListItem } from '../lib/listApi'
 
 export default function Index() {
-  const [list, setList] = useState<string[]>([])
-  const [input, setInput] = useState<string>('')
+  const [list, setList] = useState<ListItem[]>([])
 
   const getList = async () => {
-    const l = await List.getList()
+    const l = await ListApi.getList()
     l && setList(l)
   }
 
@@ -31,19 +15,18 @@ export default function Index() {
     getList()
   }, [])
 
-  const addItem = () => {
-    const a = async () => {
-      await List.addItem(input)
-      const newList = await List.getList()
-      newList && setList(newList)
+  const removeItem = (id) => {
+    const r = async () => {
+      await ListApi.removeItem(id)
+      await getList()
     }
-
-    a()
+  
+    r()
   }
 
   const reset = () => {
     const r = async () => {
-      await List.reset()
+      await ListApi.reset()
       await getList()
     }
 
@@ -53,18 +36,48 @@ export default function Index() {
   return (
     <main className="flex flex-col items-center">
       <h1 className="text-6xl">App</h1>
-      <Button onClick={addItem}>Add Item</Button>
-      {list.map((s, i) => (
-        <div key={i} className="">
-          {s}
-        </div>
-      ))}
+      <div className=" space-y-4 p-4">
+        {list.map((item) => (
+          <Item key={item.id} item={item} removeItem={removeItem} />
+        ))}
+      </div>
+      <Button onClick={reset}>Reset</Button>
+      <AddItem setList={setList} />
+    </main>
+  )
+}
+
+function Item({ item, removeItem }) {
+  return (
+    <div className="items-center rounded-2xl border p-4">
+      <div className="flex">
+        <div className="mr-4 flex items-center">{item.value}</div>
+        <Button onClick={() => removeItem(item.id)}>X</Button>
+      </div>
+    </div>
+  )
+}
+
+function AddItem({ setList }) {
+  const [input, setInput] = useState<string>('')
+
+  const addItem = () => {
+    const a = async () => {
+      await ListApi.addItem(input)
+      const newList = await ListApi.getList()
+      newList && setList(newList)
+    }
+
+    a()
+  }
+  return (
+    <div className="flex">
       <InputText
         value={input}
         placeholder="new item"
         onChange={(e) => setInput(e.target.value)}
       />
-      <Button onClick={reset}>Reset</Button>
-    </main>
+      <Button onClick={addItem}>Add Item</Button>
+    </div>
   )
 }
