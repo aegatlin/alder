@@ -1,6 +1,7 @@
 import localforage from 'localforage'
 import { useEffect, useState } from 'react'
 import { Button } from '../lib/core/Button'
+import { InputText } from '../lib/core/InputText'
 
 const List = {
   async addItem(s: string) {
@@ -19,6 +20,7 @@ const List = {
 
 export default function Index() {
   const [list, setList] = useState<string[]>([])
+  const [input, setInput] = useState<string>('')
 
   const getList = async () => {
     const l = await List.getList()
@@ -31,7 +33,7 @@ export default function Index() {
 
   const addItem = () => {
     const a = async () => {
-      await List.addItem('hey')
+      await List.addItem(input)
       const newList = await List.getList()
       newList && setList(newList)
     }
@@ -51,13 +53,18 @@ export default function Index() {
   return (
     <main className="flex flex-col items-center">
       <h1 className="text-6xl">App</h1>
-      <Button onClick={addItem}>Hey</Button>
-      <Button onClick={reset}>Reset</Button>
+      <Button onClick={addItem}>Add Item</Button>
       {list.map((s, i) => (
         <div key={i} className="">
           {s}
         </div>
       ))}
+      <InputText
+        value={input}
+        placeholder="new item"
+        onChange={(e) => setInput(e.target.value)}
+      />
+      <Button onClick={reset}>Reset</Button>
     </main>
   )
 }
