@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Button } from '../lib/core/Button'
-import { InputText } from '../lib/core/InputText'
 import { ListApi, ListItem } from '../lib/listApi'
+import { AddItem } from '../lib/AddItem'
 
 export default function Index() {
   const [list, setList] = useState<ListItem[]>([])
@@ -58,26 +58,4 @@ function Item({ item, removeItem }) {
   )
 }
 
-function AddItem({ setList }) {
-  const [input, setInput] = useState<string>('')
 
-  const addItem = () => {
-    const a = async () => {
-      await ListApi.addItem(input)
-      const newList = await ListApi.getList()
-      newList && setList(newList)
-    }
-
-    a()
-  }
-  return (
-    <div className="flex">
-      <InputText
-        value={input}
-        placeholder="new item"
-        onChange={(e) => setInput(e.target.value)}
-      />
-      <Button onClick={addItem}>Add Item</Button>
-    </div>
-  )
-}

@@ -1,9 +1,9 @@
-import { ReactNode } from 'react'
+import { MouseEvent, ReactNode } from 'react'
 
 interface ButtonProps {
   children: ReactNode
   disabled?: boolean
-  onClick: () => void
+  onClick: (e: MouseEvent<HTMLButtonElement>) => void
 }
 
 export function Button({ children, disabled, onClick }: ButtonProps) {
