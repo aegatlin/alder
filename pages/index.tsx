@@ -1,3 +1,4 @@
+import { Check } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Button } from '../lib/core/Button'
 import { ListApi, ListItem } from '../lib/listApi'
@@ -20,7 +21,7 @@ export default function Index() {
       await ListApi.removeItem(id)
       await getList()
     }
-  
+
     r()
   }
 
@@ -35,27 +36,39 @@ export default function Index() {
 
   return (
     <main className="flex flex-col items-center">
-      <h1 className="text-6xl">App</h1>
-      <div className="space-y-4 p-4">
-        {list.map((item) => (
-          <Item key={item.id} item={item} removeItem={removeItem} />
-        ))}
-      </div>
+      <h1 className="my-4 text-4xl">Grocl</h1>
+      <Items items={list} removeItem={removeItem} />
       <Button onClick={reset}>Reset</Button>
       <AddItem setList={setList} />
     </main>
   )
 }
 
-function Item({ item, removeItem }) {
+function Items({ items, removeItem }) {
   return (
-    <div className="items-center rounded-2xl border p-4">
-      <div className="flex justify-between">
-        <div className="mr-4 flex items-center">{item.value}</div>
-        <Button onClick={() => removeItem(item.id)}>X</Button>
+    <div className="">
+      <div className="divide-y">
+        {items.map((item) => (
+          <Item key={item.id} item={item} removeItem={removeItem} />
+        ))}
       </div>
     </div>
   )
 }
 
-
+function Item({ item, removeItem }) {
+  return (
+    <div className="w-screen items-center py-2 px-4">
+      <div className="flex justify-between">
+        <div className="mr-4 flex items-center">{item.value}</div>
+        <Button
+          onClick={() => removeItem(item.id)}
+          bgColor="bg-green-500"
+          bgHoverColor="bg-green-600"
+        >
+          <Check />
+        </Button>
+      </div>
+    </div>
+  )
+}

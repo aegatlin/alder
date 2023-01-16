@@ -5,13 +5,15 @@
     "start": "next start",
     "lint": "next lint",
     "test": "playwright test",
-    "prepare": "skooh"
+    "prepare": "skooh",
+    "format": "prettier --write pages lib"
   },
   "hooks": {
     "pre-commit": "npm run lint && npm run format"
   },
   "dependencies": {
     "localforage": "^1.10.0",
+    "lucide-react": "^0.105.0-alpha.4",
     "next": "^13.1.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -26,7 +28,7 @@
     "eslint": "8.31.0",
     "eslint-config-next": "13.1.1",
     "postcss": "^8.4.21",
-    "prettier": "^2.8.2",
+    "prettier": "^2.8.3",
     "prettier-plugin-tailwindcss": "^0.2.1",
     "skooh": "^0.2.1",
     "tailwindcss": "^3.2.4",
