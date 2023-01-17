@@ -1,18 +1,17 @@
-import { forwardRef, useRef, useState } from 'react'
+import { useState } from 'react'
 import { Button } from './core/Button'
 import { InputText } from './core/InputText'
 import { Modal } from './core/Modal'
-import { ListApi } from './listApi'
+import { StorageApi } from './storage'
 
-export function AddItem({ setList }) {
+export function AddItem({ listId, setList }) {
   const [open, setOpen] = useState(false)
   const [input, setInput] = useState<string>('')
 
   const handleAddItem = () => {
     const a = async () => {
-      await ListApi.addItem(input)
-      const newList = await ListApi.getList()
-      newList && setList(newList)
+      const list = await StorageApi.List.addItem(listId, input)
+      setList(list)
       setOpen(false)
       setInput('')
     }
@@ -21,7 +20,7 @@ export function AddItem({ setList }) {
   }
 
   return (
-    <div className="fixed bottom-0 my-4 flex">
+    <div className="fixed bottom-0 mb-8 mt-4 flex">
       {open && (
         <Modal onBackdropClick={() => setOpen(false)}>
           <div className="">

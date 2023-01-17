@@ -1,74 +1,58 @@
-import { Check } from 'lucide-react'
+import Link from 'next/link'
+import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
 import { Button } from '../lib/core/Button'
-import { ListApi, ListItem } from '../lib/listApi'
-import { AddItem } from '../lib/AddItem'
+import { StorageApi } from '../lib/storage'
 
-export default function Index() {
-  const [list, setList] = useState<ListItem[]>([])
-
-  const getList = async () => {
-    const l = await ListApi.getList()
-    l && setList(l)
-  }
+function useLists() {
+  const [lists, setLists] = useState<{ id: string; name: string }[]>([])
 
   useEffect(() => {
-    getList()
+    const a = async () => {
+      const ls = await StorageApi.Lists.all()
+      const lists = await Promise.all(
+        ls.map(async (id) => {
+          const l = await StorageApi.List.load(id)
+          return { id, name: l.name }
+        })
+      )
+      setLists(lists)
+    }
+
+    a()
   }, [])
 
-  const removeItem = (id) => {
-    const r = async () => {
-      await ListApi.removeItem(id)
-      await getList()
+  return { lists }
+}
+
+export default function IndexPage() {
+  const router = useRouter()
+  const { lists } = useLists()
+
+  const handleNewList = () => {
+    const a = async () => {
+      const list = await StorageApi.List.create()
+      router.push(`/lists/${list.id}`)
     }
 
-    r()
-  }
-
-  const reset = () => {
-    const r = async () => {
-      await ListApi.reset()
-      await getList()
-    }
-
-    r()
+    a()
   }
 
   return (
-    <main className="flex flex-col items-center">
+    <main className="flex flex-col items-center space-y-8">
       <h1 className="my-4 text-4xl">Grocl</h1>
-      <Items items={list} removeItem={removeItem} />
-      <Button onClick={reset}>Reset</Button>
-      <AddItem setList={setList} />
+      <div className="">
+        <div className="flex flex-col divide-y">
+          {lists &&
+            lists.map(({id, name}) => (
+              <Link key={id} href={`/lists/${id}`}>
+                <div className="py-8">{name}</div>
+              </Link>
+            ))}
+        </div>
+      </div>
+      <Button onClick={handleNewList}>New List</Button>
+      <Button onClick={() => StorageApi.clear()}>Clear Local Storage</Button>
     </main>
-  )
-}
-
-function Items({ items, removeItem }) {
-  return (
-    <div className="">
-      <div className="divide-y">
-        {items.map((item) => (
-          <Item key={item.id} item={item} removeItem={removeItem} />
-        ))}
-      </div>
-    </div>
-  )
-}
-
-function Item({ item, removeItem }) {
-  return (
-    <div className="w-screen items-center py-2 px-4">
-      <div className="flex justify-between">
-        <div className="mr-4 flex items-center">{item.value}</div>
-        <Button
-          onClick={() => removeItem(item.id)}
-          bgColor="bg-green-500"
-          bgHoverColor="bg-green-600"
-        >
-          <Check />
-        </Button>
-      </div>
-    </div>
   )
 }
