@@ -1,26 +1,10 @@
-import { Check } from 'lucide-react'
+import { Check, ChevronLeft, Home } from 'lucide-react'
+import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
 import { AddItem } from '../../lib/AddItem'
 import { Button } from '../../lib/core/Button'
 import { List, StorageApi } from '../../lib/storage'
-
-function useList(listId: string | undefined) {
-  const [list, setList] = useState<List>()
-
-  useEffect(() => {
-    if (!listId) return
-
-    const a = async () => {
-      const list = await StorageApi.List.load(listId)
-      if (list) setList(list)
-    }
-
-    a()
-  }, [listId])
-
-  return { list }
-}
 
 export default function ListPage() {
   const [list, setList] = useState<List>()
@@ -39,10 +23,17 @@ export default function ListPage() {
   }, [listId])
 
   return (
-    <main className="flex flex-col items-center">
-      <h1 className="my-4 text-4xl">Grocl</h1>
-      <h2>{list?.name}</h2>
-      <div className="">
+    <>
+      <header className="flex w-full justify-between p-8">
+        <div className="">
+          <Link href={'/'} className="">
+            <Home />
+          </Link>
+        </div>
+        <div className="">{list?.name}</div>
+        <div className="">{/* empty */}</div>
+      </header>
+      <main className="flex flex-col items-center">
         <div className="divide-y">
           {list && list.items.length > 0
             ? list.items.map((item) => (
@@ -63,8 +54,8 @@ export default function ListPage() {
               ))
             : 'no items'}
         </div>
-      </div>
-      {list && <AddItem listId={list.id} setList={setList} />}
-    </main>
+        {list && <AddItem listId={list.id} setList={setList} />}
+      </main>
+    </>
   )
 }
