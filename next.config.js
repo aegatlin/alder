@@ -4,10 +4,8 @@ module.exports = {
     { buildId, dev, isServer, defaultLoaders, nextRuntime, webpack }
   ) => {
     // Important: return the modified config
-    config.experiments = {
-      syncWebAssembly: true,
-      asyncWebAssembly: true
-    }
+    config.experiments.syncWebAssembly = true
+    config.experiments.asyncWebAssembly = true
     return config
   },
 }

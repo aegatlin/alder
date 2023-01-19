@@ -44,7 +44,7 @@ export default function IndexPage() {
       <div className="">
         <div className="flex flex-col divide-y">
           {lists &&
-            lists.map(({id, name}) => (
+            lists.map(({ id, name }) => (
               <Link key={id} href={`/lists/${id}`}>
                 <div className="py-8">{name}</div>
               </Link>
