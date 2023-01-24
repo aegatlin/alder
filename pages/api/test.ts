@@ -3,7 +3,7 @@
 import Redis from 'ioredis'
 
 let client = new Redis(
-  'rediss://default:4c65e308b3e84f7db8a0f14889989032@global-perfect-trout-32325.upstash.io:32325'
+  'rediss://default@global-perfect-trout-32325.upstash.io:32325'
 )
 
 const u = Uint8Array.from([21, 22])
