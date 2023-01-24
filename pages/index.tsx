@@ -2,41 +2,35 @@ import Link from 'next/link'
 import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
 import { Button } from '../lib/core/Button'
-import { StorageApi } from '../lib/storage'
+import * as List from '../lib/context/list'
+import { clear } from '../lib/context/localforage'
 
 function useLists() {
+  const router = useRouter()
   const [lists, setLists] = useState<{ id: string; name: string }[]>([])
 
   useEffect(() => {
     const a = async () => {
-      const ls = await StorageApi.Lists.all()
-      const lists = await Promise.all(
-        ls.map(async (id) => {
-          const l = await StorageApi.List.load(id)
-          return { id, name: l.name }
-        })
-      )
-      setLists(lists)
+      setLists(await List.all())
     }
 
     a()
   }, [])
 
-  return { lists }
-}
-
-export default function IndexPage() {
-  const router = useRouter()
-  const { lists } = useLists()
-
-  const handleNewList = () => {
+  const createList = () => {
     const a = async () => {
-      const list = await StorageApi.List.create()
+      const list = await List.create()
       router.push(`/lists/${list.id}`)
     }
 
     a()
   }
+
+  return { lists, createList }
+}
+
+export default function IndexPage() {
+  const { lists, createList } = useLists()
 
   return (
     <main className="flex flex-col items-center space-y-8">
@@ -51,8 +45,8 @@ export default function IndexPage() {
             ))}
         </div>
       </div>
-      <Button onClick={handleNewList}>New List</Button>
-      <Button onClick={() => StorageApi.clear()}>Clear Local Storage</Button>
+      <Button onClick={createList}>New List</Button>
+      <Button onClick={clear}>Clear Local Storage</Button>
     </main>
   )
 }
