@@ -26,6 +26,7 @@ export default function ListPageRoot() {
 
 function ListPage() {
   const { list, removeItem } = useList()
+  const [showAddItemModal, setShowAddItemModal] = useState(false)
   const [showEditItemModal, setShowEditItemModal] = useState(false)
   const [showEditListModal, setShowEditListModal] = useState(false)
 
@@ -83,7 +84,12 @@ function ListPage() {
               ))
             : 'no items'}
         </div>
-        <AddItemModal />
+        <div className="fixed bottom-0 mb-8 mt-4 flex">
+          <Button onClick={() => setShowAddItemModal(true)}>Add Item</Button>
+        </div>
+        {showAddItemModal && (
+          <AddItemModal close={() => setShowAddItemModal(false)} />
+        )}
         {showEditListModal && (
           <EditListModal close={() => setShowEditListModal(false)} />
         )}
@@ -105,50 +111,50 @@ export function EditListModal({ close }) {
   }
 
   return (
-    <Modal onBackdropClick={close}>
-      <div className="">
-        <InputText
-          value={input}
-          placeholder="new item"
-          onChange={(e) => setInput(e.target.value)}
-          autoFocus={true}
-        />
-        <Button onClick={handleEditList}>Save</Button>
-      </div>
-    </Modal>
+    <MyModal close={close}>
+      <InputText
+        value={input}
+        placeholder="new item"
+        onChange={(e) => setInput(e.target.value)}
+        autoFocus={true}
+      />
+      <Button onClick={handleEditList}>Save</Button>
+    </MyModal>
   )
 }
 
-export function AddItemModal() {
+export function AddItemModal({ close }) {
   const { list, addItem } = useList()
-  const [open, setOpen] = useState(false)
   const [input, setInput] = useState<string>('')
 
   if (!list) return null
 
   const handleAddItem = () => {
     addItem(list.id, input)
-    setOpen(false)
+    close()
     setInput('')
   }
 
   return (
-    <div className="fixed bottom-0 mb-8 mt-4 flex">
-      {open && (
-        <Modal onBackdropClick={() => setOpen(false)}>
-          <div className="">
-            <InputText
-              value={input}
-              placeholder="new item"
-              onChange={(e) => setInput(e.target.value)}
-              autoFocus={true}
-            />
-            <Button onClick={handleAddItem}>Save</Button>
-          </div>
-        </Modal>
-      )}
-      <Button onClick={() => setOpen(true)}>Add Item</Button>
-    </div>
+    <MyModal close={close}>
+      <InputText
+        value={input}
+        placeholder="new item"
+        onChange={(e) => setInput(e.target.value)}
+        autoFocus={true}
+      />
+      <Button onClick={handleAddItem}>Save</Button>
+    </MyModal>
+  )
+}
+
+function MyModal({ close, children }) {
+  return (
+    <Modal onBackdropClick={close}>
+      <div className="flex flex-col items-center justify-center space-y-8 rounded-2xl bg-white p-8">
+        {children}
+      </div>
+    </Modal>
   )
 }
 
@@ -171,16 +177,14 @@ function EditItemModal({
   }
 
   return (
-    <Modal onBackdropClick={close}>
-      <div className="">
-        <InputText
-          value={input}
-          placeholder="new item"
-          onChange={(e) => setInput(e.target.value)}
-          autoFocus={true}
-        />
-        <Button onClick={handleEditItem}>Save</Button>
-      </div>
-    </Modal>
+    <MyModal close={close}>
+      <InputText
+        value={input}
+        placeholder="new item"
+        onChange={(e) => setInput(e.target.value)}
+        autoFocus={true}
+      />
+      <Button onClick={handleEditItem}>Save</Button>
+    </MyModal>
   )
 }
