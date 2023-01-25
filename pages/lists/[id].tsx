@@ -124,6 +124,10 @@ export function EditListModal({ close }) {
 
   return (
     <MyModal close={close}>
+      <div className="space-y-2">
+        <div className="">Copy Link to Share</div>
+        <div className="">{window?.location?.href || ''}</div>
+      </div>
       <InputText
         value={input}
         placeholder="new item"
