@@ -27,6 +27,7 @@ export default function ListPageRoot() {
 function ListPage() {
   const { list, removeItem } = useList()
   const [showEditItemModal, setShowEditItemModal] = useState(false)
+  const [showEditListModal, setShowEditListModal] = useState(false)
 
   if (!list) {
     return <div className="">Loading...</div>
@@ -34,13 +35,18 @@ function ListPage() {
 
   return (
     <>
-      <header className="flex w-full justify-between p-8">
+      <header className="flex w-full items-center justify-between p-8">
         <div className="">
           <Link href={'/'} className="">
             <Home />
           </Link>
         </div>
-        <div className="">{list.name}</div>
+        <div
+          className="cursor-pointer rounded-2xl p-4 text-4xl hover:bg-gray-100"
+          onClick={() => setShowEditListModal(true)}
+        >
+          {list.name}
+        </div>
         <div className="">{/* empty but required for spacing */}</div>
       </header>
       <main className="flex flex-col items-center">
@@ -78,8 +84,38 @@ function ListPage() {
             : 'no items'}
         </div>
         <AddItemModal />
+        {showEditListModal && (
+          <EditListModal close={() => setShowEditListModal(false)} />
+        )}
       </main>
     </>
+  )
+}
+
+export function EditListModal({ close }) {
+  const { list, updateList } = useList()
+  const [input, setInput] = useState<string>(list?.name || '')
+
+  if (!list) return null
+
+  const handleEditList = () => {
+    updateList(list.id, { name: input })
+    setInput('')
+    close()
+  }
+
+  return (
+    <Modal onBackdropClick={close}>
+      <div className="">
+        <InputText
+          value={input}
+          placeholder="new item"
+          onChange={(e) => setInput(e.target.value)}
+          autoFocus={true}
+        />
+        <Button onClick={handleEditList}>Save</Button>
+      </div>
+    </Modal>
   )
 }
 
@@ -120,7 +156,7 @@ function EditItemModal({
   item,
   close,
 }: {
-  item: List.ListType['items'][number]
+  item: List.List['items'][number]
   close: () => void
 }) {
   const { list, updateItem } = useList()
@@ -129,7 +165,7 @@ function EditItemModal({
   if (!list) return null
 
   const handleEditItem = () => {
-    const newItem: List.ListType['items'][number] = { ...item, value: input }
+    const newItem: List.List['items'][number] = { ...item, value: input }
     updateItem(list.id, newItem)
     close()
   }

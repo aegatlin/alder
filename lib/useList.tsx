@@ -2,11 +2,12 @@ import { createContext, useContext, useEffect, useState } from 'react'
 import * as List from './context/list'
 
 type ContextType = {
-  list: List.ListType | null
+  list: List.List | null
   isLoading: boolean
   addItem: (listId: string, value: string) => void
   removeItem: (listId: string, itemId: string) => void
-  updateItem: (listId: string, item: List.ListType['items'][number]) => void
+  updateItem: (listId: string, item: List.List['items'][number]) => void
+  updateList: (listId: string, listChangeset: List.ListChangeset) => void
 }
 
 const defaultContext: ContextType = {
@@ -15,12 +16,13 @@ const defaultContext: ContextType = {
   addItem: () => null,
   removeItem: () => null,
   updateItem: () => null,
+  updateList: () => null,
 }
 
 const Context = createContext<ContextType>(defaultContext)
 
 export function ListContext({ id, children }) {
-  const [list, setList] = useState<List.ListType>()
+  const [list, setList] = useState<List.List>()
 
   useEffect(() => {
     if (!id) return
@@ -52,8 +54,12 @@ export function ListContext({ id, children }) {
     List.removeItem(listId, itemId).then(reload)
   }
 
-  const updateItem = (listId: string, item: List.ListType['items'][number]) => {
+  const updateItem = (listId: string, item: List.List['items'][number]) => {
     List.updateItem(listId, item).then(reload)
+  }
+
+  const updateList = (listId: string, listChangeset: List.ListChangeset) => {
+    List.updateList(listId, listChangeset).then(reload)
   }
 
   return (
@@ -64,6 +70,7 @@ export function ListContext({ id, children }) {
         addItem,
         removeItem,
         updateItem,
+        updateList,
       }}
     >
       {children}
@@ -72,7 +79,7 @@ export function ListContext({ id, children }) {
 }
 
 export function useList() {
-  const { list, isLoading, addItem, removeItem, updateItem } =
+  const { list, isLoading, addItem, removeItem, updateItem, updateList } =
     useContext(Context)
 
   return {
@@ -81,5 +88,6 @@ export function useList() {
     addItem,
     removeItem,
     updateItem,
+    updateList,
   }
 }

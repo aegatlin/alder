@@ -7,14 +7,16 @@ enum Key {
   ListIds = 'ListIds',
 }
 
-export type ListType = Automerge.Doc<{
+export type List = {
   id: string
   name: string
   items: { id: string; value: string }[]
-}>
+}
 
-export async function all(): Promise<ListType[]> {
-  const isNotNull = (x: ListType | null): x is ListType => !!x
+export type ListChangeset = Pick<List, 'name'>
+
+export async function all(): Promise<List[]> {
+  const isNotNull = (x: List | null): x is List => !!x
   const listIds = await allListIds()
   const lists = await Promise.all(listIds.map((id) => getListLocal(id)))
   return lists?.filter(isNotNull)
@@ -31,8 +33,8 @@ async function allListIds(): Promise<string[]> {
   }
 }
 
-export async function create(): Promise<ListType> {
-  const list = Automerge.from({
+export async function create(): Promise<List> {
+  const list = Automerge.from<List>({
     id: uuid(),
     name: 'new list',
     items: [],
@@ -45,13 +47,13 @@ export async function create(): Promise<ListType> {
   return list
 }
 
-export async function setListLocal(list: ListType) {
+export async function setListLocal(list: List) {
   const binary = Automerge.save(list)
   await localforage.setItem(list.id, binary)
   return list
 }
 
-async function setListRemote(list: ListType) {
+async function setListRemote(list: List) {
   const listRemote = await getListRemote(list.id)
   if (listRemote) {
     const newList = Automerge.merge(list, listRemote)
@@ -63,12 +65,12 @@ async function setListRemote(list: ListType) {
   }
 }
 
-export async function getListLocal(listId: string): Promise<ListType | null> {
+export async function getListLocal(listId: string): Promise<List | null> {
   const binary = await localforage.getItem<Uint8Array>(listId)
-  return binary ? Automerge.load<ListType>(binary) : null
+  return binary ? Automerge.load<List>(binary) : null
 }
 
-async function getListRemote(listId: string): Promise<ListType | null> {
+async function getListRemote(listId: string): Promise<List | null> {
   const binary = await redis.get(listId)
   return binary ? Automerge.load(binary) : null
 }
@@ -77,7 +79,7 @@ export async function addItem(listId: string, newItemValue: string) {
   const list = await getListLocal(listId)
   if (!list) throw 'no list'
 
-  const newList = Automerge.change<ListType>(list, (l) => {
+  const newList = Automerge.change<List>(list, (l) => {
     l.items.push({ id: uuid(), value: newItemValue })
   })
 
@@ -88,7 +90,7 @@ export async function removeItem(listId: string, itemId: string) {
   const list = await getListLocal(listId)
   if (!list) throw 'no list'
 
-  const newList = Automerge.change<ListType>(list, (l) => {
+  const newList = Automerge.change<List>(list, (l) => {
     const index = l.items.findIndex((item) => item.id === itemId)
     if (index !== -1) {
       l.items.splice(index, 1)
@@ -98,14 +100,11 @@ export async function removeItem(listId: string, itemId: string) {
   await setListLocal(newList)
 }
 
-export async function updateItem(
-  listId: string,
-  item: ListType['items'][number]
-) {
+export async function updateItem(listId: string, item: List['items'][number]) {
   const list = await getListLocal(listId)
   if (!list) throw 'no list'
 
-  const newList = Automerge.change<ListType>(list, (l) => {
+  const newList = Automerge.change<List>(list, (l) => {
     const index = l.items.findIndex((i) => item.id === i.id)
     if (index !== -1) {
       l.items.splice(index, 1, item)
@@ -117,4 +116,15 @@ export async function updateItem(
 
 export async function clear() {
   await localforage.clear()
+}
+
+export async function updateList(listId: string, listChangeset: ListChangeset) {
+  const list = await getListLocal(listId)
+  if (!list) throw 'no list'
+
+  const newList = Automerge.change<List>(list, (l) => {
+    if (listChangeset.name) l.name = listChangeset.name
+  })
+
+  await setListLocal(newList)
 }
