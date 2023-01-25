@@ -14,6 +14,7 @@ export type List = {
 }
 
 export type ListChangeset = Pick<List, 'name'>
+export type ItemChangeset = Pick<List['items'][number], 'value'>
 
 export async function all(): Promise<List[]> {
   const isNotNull = (x: List | null): x is List => !!x
@@ -100,15 +101,19 @@ export async function removeItem(listId: string, itemId: string) {
   await setListLocal(newList)
 }
 
-export async function updateItem(listId: string, item: List['items'][number]) {
+export async function updateItem(
+  listId: string,
+  itemId: string,
+  itemChangeset: ItemChangeset
+) {
   const list = await getListLocal(listId)
   if (!list) throw 'no list'
 
   const newList = Automerge.change<List>(list, (l) => {
-    const index = l.items.findIndex((i) => item.id === i.id)
-    if (index !== -1) {
-      l.items.splice(index, 1, item)
-    }
+    const index = l.items.findIndex((i) => i.id === itemId)
+    if (index === -1) throw 'item not found'
+
+    if (itemChangeset.value) l.items[index].value = itemChangeset.value
   })
 
   await setListLocal(newList)

@@ -6,7 +6,11 @@ type ContextType = {
   isLoading: boolean
   addItem: (listId: string, value: string) => void
   removeItem: (listId: string, itemId: string) => void
-  updateItem: (listId: string, item: List.List['items'][number]) => void
+  updateItem: (
+    listId: string,
+    itemId: string,
+    itemChangeset: List.ItemChangeset
+  ) => void
   updateList: (listId: string, listChangeset: List.ListChangeset) => void
 }
 
@@ -54,8 +58,12 @@ export function ListContext({ id, children }) {
     List.removeItem(listId, itemId).then(reload)
   }
 
-  const updateItem = (listId: string, item: List.List['items'][number]) => {
-    List.updateItem(listId, item).then(reload)
+  const updateItem = (
+    listId: string,
+    itemId: string,
+    itemChangeset: List.ItemChangeset
+  ) => {
+    List.updateItem(listId, itemId, itemChangeset).then(reload)
   }
 
   const updateList = (listId: string, listChangeset: List.ListChangeset) => {

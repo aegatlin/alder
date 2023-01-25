@@ -28,10 +28,22 @@ function ListPage() {
   const { list, removeItem } = useList()
   const [showAddItemModal, setShowAddItemModal] = useState(false)
   const [showEditItemModal, setShowEditItemModal] = useState(false)
+  const [editItemId, setEditItemId] = useState('')
   const [showEditListModal, setShowEditListModal] = useState(false)
 
   if (!list) {
     return <div className="">Loading...</div>
+  }
+
+  const handleEditItemModal = {
+    open: (itemId: string) => {
+      setShowEditItemModal(true)
+      setEditItemId(itemId)
+    },
+    close: () => {
+      setShowEditItemModal(false)
+      setEditItemId('')
+    },
   }
 
   return (
@@ -59,18 +71,12 @@ function ListPage() {
                     <div className="mr-4 flex items-center">{item.value}</div>
                     <div className="flex space-x-4">
                       <Button
-                        onClick={() => setShowEditItemModal(true)}
+                        onClick={() => handleEditItemModal.open(item.id)}
                         bgColor="bg-blue-500"
                         bgHoverColor="bg-blue-600"
                       >
                         <Edit2 />
                       </Button>
-                      {showEditItemModal && (
-                        <EditItemModal
-                          item={item}
-                          close={() => setShowEditItemModal(false)}
-                        />
-                      )}
                       <Button
                         onClick={() => removeItem(list.id, item.id)}
                         bgColor="bg-green-500"
@@ -89,6 +95,12 @@ function ListPage() {
         </div>
         {showAddItemModal && (
           <AddItemModal close={() => setShowAddItemModal(false)} />
+        )}
+        {showEditItemModal && (
+          <EditItemModal
+            close={handleEditItemModal.close}
+            itemId={editItemId}
+          />
         )}
         {showEditListModal && (
           <EditListModal close={() => setShowEditListModal(false)} />
@@ -158,21 +170,16 @@ function MyModal({ close, children }) {
   )
 }
 
-function EditItemModal({
-  item,
-  close,
-}: {
-  item: List.List['items'][number]
-  close: () => void
-}) {
+function EditItemModal({ close, itemId }) {
   const { list, updateItem } = useList()
-  const [input, setInput] = useState<string>(item.value)
+  const item = list?.items.find((i) => i.id === itemId)
+  const [input, setInput] = useState<string>(item?.value || '')
 
-  if (!list) return null
+  if (!list || !item) return null
 
   const handleEditItem = () => {
-    const newItem: List.List['items'][number] = { ...item, value: input }
-    updateItem(list.id, newItem)
+    const newItem: List.ItemChangeset = { value: input }
+    updateItem(list.id, item.id, newItem)
     close()
   }
 
