@@ -1,0 +1,26 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "all",
+      "type": "shell",
+      "command": "npm run test -- --project=chromium"
+    },
+    {
+      "label": "file",
+      "type": "shell",
+      "command": "npm run test -- ${file} --project=chromium",
+      "runOptions": {
+        "reevaluateOnRerun": false
+      }
+    },
+    {
+      "label": "line",
+      "type": "shell",
+      "command": "npm run test -- ${file}:${lineNumber} --project=chromium",
+      "runOptions": {
+        "reevaluateOnRerun": false
+      }
+    }
+  ]
+}

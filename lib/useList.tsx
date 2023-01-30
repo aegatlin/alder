@@ -32,7 +32,7 @@ export function ListContext({ id, children }) {
     if (!id) return
 
     const a = async () => {
-      const newList = await List.getListLocal(id)
+      const newList = await List.getList(id)
       newList && setList(newList)
     }
 
@@ -43,7 +43,7 @@ export function ListContext({ id, children }) {
     if (!list) return
 
     const a = async () => {
-      const newList = await List.getListLocal(list.id)
+      const newList = await List.getList(list.id)
       newList && setList(newList)
     }
 

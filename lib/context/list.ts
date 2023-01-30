@@ -1,7 +1,7 @@
 import * as Automerge from '@automerge/automerge'
 import localforage from 'localforage'
 import { v4 as uuid } from 'uuid'
-import * as redis from './redis'
+import * as Redis from './redis'
 
 enum Key {
   ListIds = 'ListIds',
@@ -19,7 +19,7 @@ export type ItemChangeset = Pick<List['items'][number], 'value'>
 export async function all(): Promise<List[]> {
   const isNotNull = (x: List | null): x is List => !!x
   const listIds = await allListIds()
-  const lists = await Promise.all(listIds.map((id) => getListLocal(id)))
+  const lists = await Promise.all(listIds.map((id) => getList(id)))
   return lists?.filter(isNotNull)
 }
 
@@ -41,54 +41,53 @@ export async function create(): Promise<List> {
     items: [],
   })
 
-  await setListLocal(list)
+  await setList(list)
   const listIds = await allListIds()
   listIds.push(list.id)
   await localforage.setItem<string[]>(Key.ListIds, listIds)
   return list
 }
 
-export async function setListLocal(list: List) {
+async function setList(list: List): Promise<List> {
   const binary = Automerge.save(list)
   await localforage.setItem(list.id, binary)
+  Redis.set(list.id, binary)
   return list
 }
 
-async function setListRemote(list: List) {
-  const listRemote = await getListRemote(list.id)
-  if (listRemote) {
-    const newList = Automerge.merge(list, listRemote)
-    const newListBinary = Automerge.save(newList)
-    await redis.set(list.id, newListBinary)
-  } else {
-    const listBinary = Automerge.save(list)
-    await redis.set(list.id, listBinary)
-  }
+export async function getList(listId: string): Promise<List | null> {
+  const local = await getListLocal(listId)
+  getListRemote(listId).then((remoteList) =>
+    console.log('remote list: ', remoteList)
+  )
+  return local
 }
 
-export async function getListLocal(listId: string): Promise<List | null> {
+// Should only be used in getList
+async function getListLocal(listId: string): Promise<List | null> {
   const binary = await localforage.getItem<Uint8Array>(listId)
   return binary ? Automerge.load<List>(binary) : null
 }
 
+// Should only be used in getList
 async function getListRemote(listId: string): Promise<List | null> {
-  const binary = await redis.get(listId)
-  return binary ? Automerge.load(binary) : null
+  const binary = await Redis.get(listId)
+  return binary ? Automerge.load<List>(binary) : null
 }
 
 export async function addItem(listId: string, newItemValue: string) {
-  const list = await getListLocal(listId)
+  const list = await getList(listId)
   if (!list) throw 'no list'
 
   const newList = Automerge.change<List>(list, (l) => {
     l.items.push({ id: uuid(), value: newItemValue })
   })
 
-  await setListLocal(newList)
+  await setList(newList)
 }
 
 export async function removeItem(listId: string, itemId: string) {
-  const list = await getListLocal(listId)
+  const list = await getList(listId)
   if (!list) throw 'no list'
 
   const newList = Automerge.change<List>(list, (l) => {
@@ -98,7 +97,7 @@ export async function removeItem(listId: string, itemId: string) {
     }
   })
 
-  await setListLocal(newList)
+  await setList(newList)
 }
 
 export async function updateItem(
@@ -106,7 +105,7 @@ export async function updateItem(
   itemId: string,
   itemChangeset: ItemChangeset
 ) {
-  const list = await getListLocal(listId)
+  const list = await getList(listId)
   if (!list) throw 'no list'
 
   const newList = Automerge.change<List>(list, (l) => {
@@ -116,7 +115,7 @@ export async function updateItem(
     if (itemChangeset.value) l.items[index].value = itemChangeset.value
   })
 
-  await setListLocal(newList)
+  await setList(newList)
 }
 
 export async function clear() {
@@ -124,12 +123,12 @@ export async function clear() {
 }
 
 export async function updateList(listId: string, listChangeset: ListChangeset) {
-  const list = await getListLocal(listId)
+  const list = await getList(listId)
   if (!list) throw 'no list'
 
   const newList = Automerge.change<List>(list, (l) => {
     if (listChangeset.name) l.name = listChangeset.name
   })
 
-  await setListLocal(newList)
+  await setList(newList)
 }

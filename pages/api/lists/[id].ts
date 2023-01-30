@@ -1,9 +1,13 @@
-import Redis from 'ioredis'
 import { NextApiRequest, NextApiResponse } from 'next'
+import getRawBody from 'raw-body'
+import * as bin from '../../../server/binaryService'
+import * as redisService from '../../../server/redisService'
 
-const redisClient = new Redis(
-  `rediss://default:${process.env.UPSTASH_REDIS_PASSWORD}@global-perfect-trout-32325.upstash.io:32325`
-)
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+}
 
 export default async function handler(
   req: NextApiRequest,
@@ -12,12 +16,12 @@ export default async function handler(
   const id = (req.query.id || '') as string
 
   if (req.method === 'GET') {
-    return res.json({
-      data: await redisClient.get(id),
-    })
+    const binary = await redisService.getBuffer(id)
+    binary ? res.send(binary) : res.status(404).end()
   } else if (req.method === 'POST') {
-    const binary = req.body.data
-    const isOk = await redisClient.set(id, binary)
+    const buf = await getRawBody(req)
+    console.log(req.url, req.headers, bin.bufferToUint8Array(buf))
+    const isOk = await redisService.setBuffer(id, buf)
     isOk === 'OK' ? res.status(200).end() : res.status(500).end()
   }
 }
