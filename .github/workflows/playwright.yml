@@ -7,7 +7,7 @@ on:
 jobs:
   test:
     env:
-      - UPSTASH_REDIS_PASSWORD: ${{ secret.UPSTASH_REDIS_PASSWORD }}
+      UPSTASH_REDIS_PASSWORD: ${{ secret.UPSTASH_REDIS_PASSWORD }}
     timeout-minutes: 60
     runs-on: ubuntu-latest
     steps:
