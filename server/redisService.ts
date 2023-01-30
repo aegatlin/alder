@@ -1,7 +1,7 @@
 import Redis from 'ioredis'
 
 let redis = new Redis(
-  'rediss://default:c9c36b5cae2c4c5eb13225fba32f85ad@global-perfect-trout-32325.upstash.io:32325'
+  `rediss://default:${process.env.UPSTASH_REDIS_PASSWORD}@global-perfect-trout-32325.upstash.io:32325`
 )
 
 export async function getBuffer(id: string): Promise<Buffer | null> {
