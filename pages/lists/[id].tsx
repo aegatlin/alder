@@ -54,12 +54,12 @@ function ListPage() {
             <Home />
           </Link>
         </div>
-        <div
+        <h1
           className="cursor-pointer rounded-2xl p-4 text-4xl hover:bg-gray-100"
           onClick={() => setShowEditListModal(true)}
         >
           {list.name}
-        </div>
+        </h1>
         <div className="">{/* empty but required for spacing */}</div>
       </header>
       <main className="flex flex-col items-center">

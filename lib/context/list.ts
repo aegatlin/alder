@@ -49,18 +49,29 @@ export async function create(): Promise<List> {
 }
 
 async function setList(list: List): Promise<List> {
-  const binary = Automerge.save(list)
-  await localforage.setItem(list.id, binary)
+  await setListLocal(list)
   Redis.set(list.id, binary)
   return list
 }
 
 export async function getList(listId: string): Promise<List | null> {
   const local = await getListLocal(listId)
-  getListRemote(listId).then((remoteList) =>
-    console.log('remote list: ', remoteList)
-  )
-  return local
+
+  if (local) {
+    getListRemote(listId).then((remoteList) => {
+      remoteList && setListLocal(remoteList)
+    })
+    return local
+  } else {
+    const remote = await getListRemote(listId)
+    remote && (await setListLocal(remote))
+    return remote
+  }
+}
+
+async function setListLocal(list: List) {
+  const binary = Automerge.save(list)
+  await localforage.setItem(list.id, binary)
 }
 
 // Should only be used in getList
