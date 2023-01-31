@@ -1,6 +1,6 @@
 import * as Automerge from '@automerge/automerge'
 import test, { expect } from '@playwright/test'
-import { List } from '../lib/context/list'
+import { List } from '../lib/types'
 import * as bin from '../server/binaryService'
 import * as redisService from '../server/redisService'
 
@@ -18,5 +18,8 @@ test.describe('visiting a list for the first time', async () => {
     await redisService.setBuffer(id, bin.uint8ArrayToBuffer(buf))
     await page.goto(`/lists/${id}`)
     await expect(page.getByRole('heading')).toContainText('Test List')
+    await page.goto('/')
+    await expect(page.getByRole('heading')).toContainText('Grocl')
+    await expect(page.getByRole('link', { name: 'Test List' })).toBeVisible()
   })
 })

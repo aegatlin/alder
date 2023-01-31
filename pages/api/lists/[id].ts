@@ -20,7 +20,6 @@ export default async function handler(
     binary ? res.send(binary) : res.status(404).end()
   } else if (req.method === 'POST') {
     const buf = await getRawBody(req)
-    console.log(req.url, req.headers, bin.bufferToUint8Array(buf))
     const isOk = await redisService.setBuffer(id, buf)
     isOk === 'OK' ? res.status(200).end() : res.status(500).end()
   }

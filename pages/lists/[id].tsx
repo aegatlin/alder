@@ -1,35 +1,29 @@
 import { Check, Edit2, Home } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Button } from '../../lib/core/Button'
 import { InputText } from '../../lib/core/InputText'
 import { Modal } from '../../lib/core/Modal'
-import { ListContext, useList } from '../../lib/useList'
-import * as List from '../../lib/context/list'
+import { ItemChangeset } from '../../lib/types'
+import { useList } from '../../lib/useList'
 
-export default function ListPageRoot() {
+export default function ListPage() {
+  const router = useRouter()
+  const [id, setId] = useState((router.query.id as string) || null)
   const {
-    query: { id },
-  } = useRouter()
-
-  if (typeof id !== 'string') {
-    return 'Loading...'
-  }
-
-  return (
-    <ListContext id={id}>
-      <ListPage />
-    </ListContext>
-  )
-}
-
-function ListPage() {
-  const { list, removeItem } = useList()
+    list,
+    updateList,
+    item: { add, remove, update },
+  } = useList(id)
   const [showAddItemModal, setShowAddItemModal] = useState(false)
   const [showEditItemModal, setShowEditItemModal] = useState(false)
   const [editItemId, setEditItemId] = useState('')
   const [showEditListModal, setShowEditListModal] = useState(false)
+
+  useEffect(() => {
+    setId((router.query.id as string) || null)
+  }, [router])
 
   if (!list) {
     return <div className="">Loading...</div>
@@ -78,7 +72,7 @@ function ListPage() {
                         <Edit2 />
                       </Button>
                       <Button
-                        onClick={() => removeItem(list.id, item.id)}
+                        onClick={() => remove(item.id)}
                         bgColor="bg-green-500"
                         bgHoverColor="bg-green-600"
                       >
@@ -94,30 +88,36 @@ function ListPage() {
           <Button onClick={() => setShowAddItemModal(true)}>Add Item</Button>
         </div>
         {showAddItemModal && (
-          <AddItemModal close={() => setShowAddItemModal(false)} />
+          <AddItemModal
+            addItem={add}
+            close={() => setShowAddItemModal(false)}
+          />
         )}
         {showEditItemModal && (
           <EditItemModal
+            list={list}
+            updateItem={update}
             close={handleEditItemModal.close}
             itemId={editItemId}
           />
         )}
         {showEditListModal && (
-          <EditListModal close={() => setShowEditListModal(false)} />
+          <EditListModal
+            list={list}
+            updateList={updateList}
+            close={() => setShowEditListModal(false)}
+          />
         )}
       </main>
     </>
   )
 }
 
-export function EditListModal({ close }) {
-  const { list, updateList } = useList()
+export function EditListModal({ list, updateList, close }) {
   const [input, setInput] = useState<string>(list?.name || '')
 
-  if (!list) return null
-
   const handleEditList = () => {
-    updateList(list.id, { name: input })
+    updateList({ name: input })
     setInput('')
     close()
   }
@@ -139,14 +139,11 @@ export function EditListModal({ close }) {
   )
 }
 
-export function AddItemModal({ close }) {
-  const { list, addItem } = useList()
+export function AddItemModal({ addItem, close }) {
   const [input, setInput] = useState<string>('')
 
-  if (!list) return null
-
   const handleAddItem = () => {
-    addItem(list.id, input)
+    addItem(input)
     close()
     setInput('')
   }
@@ -174,16 +171,15 @@ function MyModal({ close, children }) {
   )
 }
 
-function EditItemModal({ close, itemId }) {
-  const { list, updateItem } = useList()
+function EditItemModal({ list, updateItem, close, itemId }) {
   const item = list?.items.find((i) => i.id === itemId)
   const [input, setInput] = useState<string>(item?.value || '')
 
   if (!list || !item) return null
 
   const handleEditItem = () => {
-    const newItem: List.ItemChangeset = { value: input }
-    updateItem(list.id, item.id, newItem)
+    const newItem: ItemChangeset = { value: input }
+    updateItem(item.id, newItem)
     close()
   }
 

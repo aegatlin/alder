@@ -1,8 +1,8 @@
-import { test, expect } from '@playwright/test'
-import * as redis from '../server/redisService'
 import * as Automerge from '@automerge/automerge'
+import { expect, test } from '@playwright/test'
+import { List } from '../lib/types'
 import * as bin from '../server/binaryService'
-import { List } from '../lib/context/list'
+import * as redis from '../server/redisService'
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/')

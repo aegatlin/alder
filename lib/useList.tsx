@@ -1,101 +1,41 @@
-import { createContext, useContext, useEffect, useState } from 'react'
-import * as List from './context/list'
+import { useContext, useEffect } from 'react'
+import ns from './context'
+import { ListsContext } from './ListsContext'
+import { ItemChangeset, List, ListChangeset } from './types'
 
-type ContextType = {
-  list: List.List | null
-  isLoading: boolean
-  addItem: (listId: string, value: string) => void
-  removeItem: (listId: string, itemId: string) => void
-  updateItem: (
-    listId: string,
-    itemId: string,
-    itemChangeset: List.ItemChangeset
-  ) => void
-  updateList: (listId: string, listChangeset: List.ListChangeset) => void
+interface UseList {
+  list: List | null
+  updateList: (listChangeset: ListChangeset) => void
+  item: {
+    add: (value: string) => void
+    remove: (itemId: string) => void
+    update: (itemId: string, itemChangeset: ItemChangeset) => void
+  }
 }
 
-const defaultContext: ContextType = {
-  list: { id: '', name: '', items: [] },
-  isLoading: false,
-  addItem: () => null,
-  removeItem: () => null,
-  updateItem: () => null,
-  updateList: () => null,
-}
-
-const Context = createContext<ContextType>(defaultContext)
-
-export function ListContext({ id, children }) {
-  const [list, setList] = useState<List.List>()
+export function useList(id: string | null): UseList {
+  const { lists, load } = useContext(ListsContext)
+  const list = lists?.find((l) => l.id === id) ?? null
 
   useEffect(() => {
-    if (!id) return
-
-    const a = async () => {
-      const newList = await List.getList(id)
-      newList && setList(newList)
-    }
-
-    a()
-  }, [id])
-
-  const reload = () => {
-    if (!list) return
-
-    const a = async () => {
-      const newList = await List.getList(list.id)
-      newList && setList(newList)
-    }
-
-    a()
-  }
-
-  const addItem = (listId: string, value: string) => {
-    List.addItem(listId, value).then(reload)
-  }
-
-  const removeItem = (listId: string, itemId: string) => {
-    List.removeItem(listId, itemId).then(reload)
-  }
-
-  const updateItem = (
-    listId: string,
-    itemId: string,
-    itemChangeset: List.ItemChangeset
-  ) => {
-    List.updateItem(listId, itemId, itemChangeset).then(reload)
-  }
-
-  const updateList = (listId: string, listChangeset: List.ListChangeset) => {
-    List.updateList(listId, listChangeset).then(reload)
-  }
-
-  return (
-    <Context.Provider
-      value={{
-        list: list || null,
-        isLoading: !!list,
-        addItem,
-        removeItem,
-        updateItem,
-        updateList,
-      }}
-    >
-      {children}
-    </Context.Provider>
-  )
-}
-
-export function useList() {
-  const { list, isLoading, addItem, removeItem, updateItem, updateList } =
-    useContext(Context)
+    load()
+  }, [])
 
   return {
     list,
-    isLoading,
-    addItem,
-    removeItem,
-    updateItem,
-    updateList,
+    updateList: (listChangeset) => {
+      list && ns.list.updateList(list.id, listChangeset).then(load)
+    },
+    item: {
+      add: (value) => {
+        list && ns.list.addItem(list.id, value).then(load)
+      },
+      remove: (itemId) => {
+        list && ns.list.removeItem(list.id, itemId).then(load)
+      },
+      update: (itemId, itemChangeset) => {
+        list && ns.list.updateItem(list.id, itemId, itemChangeset).then(load)
+      },
+    },
   }
 }

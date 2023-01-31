@@ -1,36 +1,28 @@
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import { useEffect, useState } from 'react'
-import * as List from '../lib/context/list'
-import { clear } from '../lib/context/localforage'
+import { useContext, useReducer } from 'react'
+import ns from '../lib/context'
 import { Button } from '../lib/core/Button'
-
-function useLists() {
-  const router = useRouter()
-  const [lists, setLists] = useState<{ id: string; name: string }[]>([])
-
-  useEffect(() => {
-    const a = async () => {
-      setLists(await List.all())
-    }
-
-    a()
-  }, [])
-
-  const createList = () => {
-    const a = async () => {
-      const list = await List.create()
-      router.push(`/lists/${list.id}`)
-    }
-
-    a()
-  }
-
-  return { lists, createList }
-}
+import { ListsContext, ListsProvider } from '../lib/ListsContext'
 
 export default function IndexPage() {
-  const { lists, createList } = useLists()
+  return (
+    <ListsProvider>
+      <IndexPageContent />
+    </ListsProvider>
+  )
+}
+
+function IndexPageContent() {
+  const router = useRouter()
+  const { lists, load } = useContext(ListsContext)
+  const clear = () => ns.localStorage.clear()
+  const handleNewList = () => {
+    ns.list.create().then((list) => {
+      load()
+      router.push(`/lists/${list.id}`)
+    })
+  }
 
   return (
     <main className="flex flex-col items-center space-y-8">
@@ -45,7 +37,7 @@ export default function IndexPage() {
             ))}
         </div>
       </div>
-      <Button onClick={createList}>New List</Button>
+      <Button onClick={handleNewList}>New List</Button>
       <Button onClick={clear}>Clear Local Storage</Button>
     </main>
   )
