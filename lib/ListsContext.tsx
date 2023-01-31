@@ -1,5 +1,5 @@
 import { createContext, useEffect, useState } from 'react'
-import ns from './context'
+import ns from './namespaces'
 import { List } from './types'
 
 type ListsContextType = { lists: List[]; load: () => void }

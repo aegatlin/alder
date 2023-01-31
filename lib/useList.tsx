@@ -1,5 +1,5 @@
 import { useContext, useEffect } from 'react'
-import ns from './context'
+import ns from './namespaces'
 import { ListsContext } from './ListsContext'
 import { ItemChangeset, List, ListChangeset } from './types'
 

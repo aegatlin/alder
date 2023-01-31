@@ -1,6 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import getRawBody from 'raw-body'
-import * as bin from '../../../server/binaryService'
 import * as redisService from '../../../server/redisService'
 
 export const config = {

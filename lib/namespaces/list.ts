@@ -10,14 +10,14 @@ enum Key {
 export async function all(): Promise<List[]> {
   const isNotNull = (x: List | null): x is List => !!x
   const listIds = await getListIds()
-  const lists = await Promise.all(listIds.map((id) => getList(id)))
+  const lists = await Promise.all(listIds.map((id) => ns.amdoc.get<List>(id)))
   return lists?.filter(isNotNull)
 }
 
 async function getListIds(): Promise<string[]> {
-  const listIds = await ns.localStorage.get<string[]>(Key.ListIds)
+  const listIds = await ns.localStore.get<string[]>(Key.ListIds)
   if (listIds) return listIds
-  await ns.localStorage.set(Key.ListIds, [])
+  await ns.localStore.set(Key.ListIds, [])
   return []
 }
 
@@ -25,7 +25,7 @@ async function ensureListIdsInclude(listId: string) {
   const listIds = await getListIds()
   if (listIds.some((lid) => lid === listId)) return
   listIds.push(listId)
-  ns.localStorage.set(Key.ListIds, listIds)
+  ns.localStore.set(Key.ListIds, listIds)
 }
 
 export async function create(): Promise<List> {
@@ -36,21 +36,16 @@ export async function create(): Promise<List> {
   })
 
   await setList(list)
-  await ensureListIdsInclude(list.id)
   return list
 }
 
-export async function getList(id: string): Promise<List | null> {
-  return await ns.amdoc.get(id)
-}
-
-export async function setList(list: List) {
+async function setList(list: List) {
   await ns.amdoc.set(list.id, list)
   await ensureListIdsInclude(list.id)
 }
 
 export async function addItem(listId: string, newItemValue: string) {
-  const list = await getList(listId)
+  const list = await ns.amdoc.get<List>(listId)
   if (!list) throw 'no list'
 
   const newList = Automerge.change<List>(list, (l) => {
@@ -61,7 +56,7 @@ export async function addItem(listId: string, newItemValue: string) {
 }
 
 export async function removeItem(listId: string, itemId: string) {
-  const list = await getList(listId)
+  const list = await ns.amdoc.get<List>(listId)
   if (!list) throw 'no list'
 
   const newList = Automerge.change<List>(list, (l) => {
@@ -79,7 +74,7 @@ export async function updateItem(
   itemId: string,
   itemChangeset: ItemChangeset
 ) {
-  const list = await getList(listId)
+  const list = await ns.amdoc.get<List>(listId)
   if (!list) throw 'no list'
 
   const newList = Automerge.change<List>(list, (l) => {
@@ -93,7 +88,7 @@ export async function updateItem(
 }
 
 export async function updateList(listId: string, listChangeset: ListChangeset) {
-  const list = await getList(listId)
+  const list = await ns.amdoc.get<List>(listId)
   if (!list) throw 'no list'
 
   const newList = Automerge.change<List>(list, (l) => {

@@ -1,9 +1,9 @@
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import { useContext, useReducer } from 'react'
-import ns from '../lib/context'
+import { useContext } from 'react'
 import { Button } from '../lib/core/Button'
 import { ListsContext, ListsProvider } from '../lib/ListsContext'
+import ns from '../lib/namespaces'
 
 export default function IndexPage() {
   return (
@@ -16,7 +16,7 @@ export default function IndexPage() {
 function IndexPageContent() {
   const router = useRouter()
   const { lists, load } = useContext(ListsContext)
-  const clear = () => ns.localStorage.clear()
+  const clear = () => ns.localStore.clear()
   const handleNewList = () => {
     ns.list.create().then((list) => {
       load()
