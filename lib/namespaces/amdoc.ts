@@ -12,7 +12,6 @@ export async function get<T>(id: string): Promise<Automerge.Doc<T> | null> {
 
   if (bin) {
     const doc = Automerge.load<T>(bin)
-    // merge remote async here
     return doc
   } else {
     const remoteBin = await ns.remoteBufferStore.get(id)

@@ -7,6 +7,13 @@ enum Key {
   ListIds = 'ListIds',
 }
 
+export async function remoteSync(listId: string) {
+  const list = await ns.amdoc.get<List>(listId)
+  if (list) {
+    ensureListIdsInclude(list.id)
+  }
+}
+
 export async function all(): Promise<List[]> {
   const isNotNull = (x: List | null): x is List => !!x
   const listIds = await getListIds()

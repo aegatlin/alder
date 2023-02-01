@@ -18,8 +18,11 @@ export function useList(id: string | null): UseList {
   const list = lists?.find((l) => l.id === id) ?? null
 
   useEffect(() => {
-    load()
-  }, [])
+    if (list) return
+    if (!id) return
+
+    ns.list.remoteSync(id)
+  }, [id, list])
 
   return {
     list,
