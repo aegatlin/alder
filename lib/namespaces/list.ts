@@ -1,4 +1,3 @@
-import * as Automerge from '@automerge/automerge'
 import { v4 as uuid } from 'uuid'
 import ns from '.'
 import { ItemChangeset, List, ListChangeset } from '../types'
@@ -8,7 +7,7 @@ enum Key {
 }
 
 export async function remoteSync(listId: string) {
-  const list = await ns.amdoc.get<List>(listId)
+  const list = await ns.doc.get<List>(listId)
   if (list) {
     ensureListIdsInclude(list.id)
   }
@@ -17,7 +16,7 @@ export async function remoteSync(listId: string) {
 export async function all(): Promise<List[]> {
   const isNotNull = (x: List | null): x is List => !!x
   const listIds = await getListIds()
-  const lists = await Promise.all(listIds.map((id) => ns.amdoc.get<List>(id)))
+  const lists = await Promise.all(listIds.map((id) => ns.doc.get<List>(id)))
   return lists?.filter(isNotNull)
 }
 
@@ -36,7 +35,7 @@ async function ensureListIdsInclude(listId: string) {
 }
 
 export async function create(): Promise<List> {
-  const list = Automerge.from<List>({
+  const list = ns.doc.create<List>({
     id: uuid(),
     name: 'new list',
     items: [],
@@ -47,15 +46,15 @@ export async function create(): Promise<List> {
 }
 
 async function setList(list: List) {
-  await ns.amdoc.set(list.id, list)
+  await ns.doc.set(list.id, list)
   await ensureListIdsInclude(list.id)
 }
 
 export async function addItem(listId: string, newItemValue: string) {
-  const list = await ns.amdoc.get<List>(listId)
+  const list = await ns.doc.get<List>(listId)
   if (!list) throw 'no list'
 
-  const newList = Automerge.change<List>(list, (l) => {
+  const newList = ns.doc.change<List>(list, (l) => {
     l.items.push({ id: uuid(), value: newItemValue })
   })
 
@@ -63,10 +62,10 @@ export async function addItem(listId: string, newItemValue: string) {
 }
 
 export async function removeItem(listId: string, itemId: string) {
-  const list = await ns.amdoc.get<List>(listId)
+  const list = await ns.doc.get<List>(listId)
   if (!list) throw 'no list'
 
-  const newList = Automerge.change<List>(list, (l) => {
+  const newList = ns.doc.change<List>(list, (l) => {
     const index = l.items.findIndex((item) => item.id === itemId)
     if (index !== -1) {
       l.items.splice(index, 1)
@@ -81,10 +80,10 @@ export async function updateItem(
   itemId: string,
   itemChangeset: ItemChangeset
 ) {
-  const list = await ns.amdoc.get<List>(listId)
+  const list = await ns.doc.get<List>(listId)
   if (!list) throw 'no list'
 
-  const newList = Automerge.change<List>(list, (l) => {
+  const newList = ns.doc.change<List>(list, (l) => {
     const index = l.items.findIndex((i) => i.id === itemId)
     if (index === -1) throw 'item not found'
 
@@ -95,10 +94,10 @@ export async function updateItem(
 }
 
 export async function updateList(listId: string, listChangeset: ListChangeset) {
-  const list = await ns.amdoc.get<List>(listId)
+  const list = await ns.doc.get<List>(listId)
   if (!list) throw 'no list'
 
-  const newList = Automerge.change<List>(list, (l) => {
+  const newList = ns.doc.change<List>(list, (l) => {
     if (listChangeset.name) l.name = listChangeset.name
   })
 
