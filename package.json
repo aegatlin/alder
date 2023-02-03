@@ -6,13 +6,14 @@
     "lint": "next lint",
     "test": "playwright test",
     "prepare": "skooh",
-    "format": "prettier --write pages lib"
+    "format": "prettier --write pages client server"
   },
   "hooks": {
     "pre-commit": "npm run lint && npm run format"
   },
   "dependencies": {
     "@automerge/automerge": "^2.0.0",
+    "eventemitter3": "^5.0.0",
     "ioredis": "^5.2.5",
     "localforage": "^1.10.0",
     "lucide-react": "^0.105.0-alpha.4",

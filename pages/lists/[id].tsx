@@ -1,33 +1,58 @@
 import { Check, Edit2, Home } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import { useEffect, useState } from 'react'
-import { Button } from '../../lib/core/Button'
-import { InputText } from '../../lib/core/InputText'
-import { Modal } from '../../lib/core/Modal'
-import { ItemChangeset } from '../../lib/types'
-import { useList } from '../../lib/useList'
+import { useContext, useEffect, useState } from 'react'
+import { Button } from '../../client/core/Button'
+import { InputText } from '../../client/core/InputText'
+import { Modal } from '../../client/core/Modal'
+import { ListsContext } from '../../client/ListsContext'
+import { Lists } from '../../client/namespaces/Lists'
+import {
+  ListChangesetType,
+  ListItemChangesetType,
+  ListType,
+} from '../../client/types'
 
 export default function ListPage() {
   const router = useRouter()
-  const [id, setId] = useState((router.query.id as string) || null)
-  const {
-    list,
-    updateList,
-    item: { add, remove, update },
-  } = useList(id)
-  const [showAddItemModal, setShowAddItemModal] = useState(false)
-  const [showEditItemModal, setShowEditItemModal] = useState(false)
-  const [editItemId, setEditItemId] = useState('')
-  const [showEditListModal, setShowEditListModal] = useState(false)
+  const id = router.query.id
 
-  useEffect(() => {
-    setId((router.query.id as string) || null)
-  }, [router])
+  if (typeof id !== 'string') {
+    return <div className="">Loading...</div>
+  }
+
+  return <ListPageContent id={id} />
+}
+
+function ListPageContent({ id }: { id: string }) {
+  const { lists } = useContext(ListsContext)
+  const list = lists.find((l) => l.id === id) ?? null
 
   if (!list) {
     return <div className="">Loading...</div>
   }
+
+  return <ListPageContentWithList list={list} />
+}
+
+function useList(list: ListType) {
+  return {
+    edit: (changes: ListChangesetType) => Lists.changeAndSave(list, changes),
+    item: {
+      add: (data: ListItemChangesetType) => Lists.Items.addAndSave(list, data),
+      remove: (itemId: string) => Lists.Items.removeAndSave(list, itemId),
+      edit: (itemId: string, changes: ListItemChangesetType) =>
+        Lists.Items.changeAndSave(list, itemId, changes),
+    },
+  }
+}
+
+function ListPageContentWithList({ list }) {
+  const { edit: listEdit, item: listItem } = useList(list)
+  const [showAddItemModal, setShowAddItemModal] = useState(false)
+  const [showEditItemModal, setShowEditItemModal] = useState(false)
+  const [editItemId, setEditItemId] = useState('')
+  const [showEditListModal, setShowEditListModal] = useState(false)
 
   const handleEditItemModal = {
     open: (itemId: string) => {
@@ -72,7 +97,7 @@ export default function ListPage() {
                         <Edit2 />
                       </Button>
                       <Button
-                        onClick={() => remove(item.id)}
+                        onClick={() => listItem.remove(item.id)}
                         bgColor="bg-green-500"
                         bgHoverColor="bg-green-600"
                       >
@@ -89,14 +114,14 @@ export default function ListPage() {
         </div>
         {showAddItemModal && (
           <AddItemModal
-            addItem={add}
+            addItem={listItem.add}
             close={() => setShowAddItemModal(false)}
           />
         )}
         {showEditItemModal && (
           <EditItemModal
             list={list}
-            updateItem={update}
+            editItem={listItem.edit}
             close={handleEditItemModal.close}
             itemId={editItemId}
           />
@@ -104,7 +129,7 @@ export default function ListPage() {
         {showEditListModal && (
           <EditListModal
             list={list}
-            updateList={updateList}
+            editList={listEdit}
             close={() => setShowEditListModal(false)}
           />
         )}
@@ -113,12 +138,17 @@ export default function ListPage() {
   )
 }
 
-export function EditListModal({ list, updateList, close }) {
+interface EditListModalParams {
+  list: ListType
+  editList: (change: ListChangesetType) => void
+  close: () => void
+}
+
+export function EditListModal({ list, editList, close }: EditListModalParams) {
   const [input, setInput] = useState<string>(list?.name || '')
 
   const handleEditList = () => {
-    updateList({ name: input })
-    setInput('')
+    editList({ name: input })
     close()
   }
 
@@ -139,13 +169,16 @@ export function EditListModal({ list, updateList, close }) {
   )
 }
 
-export function AddItemModal({ addItem, close }) {
+interface AddItemModalParams {
+  addItem: (x: ListItemChangesetType) => void
+  close: () => void
+}
+export function AddItemModal({ addItem, close }: AddItemModalParams) {
   const [input, setInput] = useState<string>('')
 
   const handleAddItem = () => {
-    addItem(input)
+    addItem({ value: input })
     close()
-    setInput('')
   }
 
   return (
@@ -171,15 +204,20 @@ function MyModal({ close, children }) {
   )
 }
 
-function EditItemModal({ list, updateItem, close, itemId }) {
-  const item = list?.items.find((i) => i.id === itemId)
+interface EditItemModalParams {
+  list: ListType
+  itemId: string
+  editItem: (itemId: string, changes: ListItemChangesetType) => void
+  close: () => void
+}
+function EditItemModal({ list, editItem, close, itemId }: EditItemModalParams) {
+  const item = list.items.find((i) => i.id === itemId)
   const [input, setInput] = useState<string>(item?.value || '')
 
-  if (!list || !item) return null
+  if (!item) return null
 
   const handleEditItem = () => {
-    const newItem: ItemChangeset = { value: input }
-    updateItem(item.id, newItem)
+    editItem(item.id, { value: input })
     close()
   }
 

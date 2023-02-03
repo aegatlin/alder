@@ -1,7 +1,7 @@
 import Head from 'next/head'
 import Script from 'next/script'
-import { ListsProvider } from '../lib/ListsContext'
-import '../lib/styles.css'
+import { ListsContextProvider } from '../client/ListsContext'
+import '../client/styles.css'
 
 function App({ Component, pageProps }) {
   return (
@@ -9,9 +9,9 @@ function App({ Component, pageProps }) {
       <Head>
         <link rel="manifest" href="/manifest.json" />
       </Head>
-      <ListsProvider>
+      <ListsContextProvider>
         <Component {...pageProps} />
-      </ListsProvider>
+      </ListsContextProvider>
       <Script src="/localforage.js" />
     </>
   )
