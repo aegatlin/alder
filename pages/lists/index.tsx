@@ -1,19 +1,17 @@
+import localforage from 'localforage'
 import Link from 'next/link'
-import { useContext } from 'react'
+import { useRouter } from 'next/router'
 import { Button } from '../../client/core/Button'
-import { ListsContext, ListsContextProvider } from '../../client/ListsContext'
-import { LocalStorage } from '../../client/namespaces/LocalStorage'
+import { useLists } from '../../client/useLists'
 
 export default function ListsIndexPage() {
-  return (
-    <ListsContextProvider>
-      <IndexPageContent />
-    </ListsContextProvider>
-  )
-}
+  const router = useRouter()
+  const { lists, create } = useLists()
 
-function IndexPageContent() {
-  const { lists, newList } = useContext(ListsContext)
+  const handleNewListClick = async () => {
+    const id = await create({ name: 'new list', items: [] })
+    router.push(`/lists/${id}`)
+  }
 
   return (
     <main className="flex flex-col items-center space-y-8">
@@ -27,8 +25,8 @@ function IndexPageContent() {
           ))}
         </div>
       </div>
-      <Button onClick={() => newList()}>New List</Button>
-      <Button onClick={() => LocalStorage.clear()}>Clear Local Storage</Button>
+      <Button onClick={handleNewListClick}>New List</Button>
+      <Button onClick={() => localforage.clear()}>Clear Local Storage</Button>
     </main>
   )
 }

@@ -1,17 +1,13 @@
 import { Check, Edit2, Home } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import { useContext, useEffect, useState } from 'react'
+import { useState } from 'react'
+import { v4 as uuid } from 'uuid'
 import { Button } from '../../client/core/Button'
 import { InputText } from '../../client/core/InputText'
 import { Modal } from '../../client/core/Modal'
-import { ListsContext } from '../../client/ListsContext'
-import { Lists } from '../../client/namespaces/Lists'
-import {
-  ListChangesetType,
-  ListItemChangesetType,
-  ListType,
-} from '../../client/types'
+import { ListType } from '../../client/types'
+import { UseList, useList } from '../../client/useList'
 
 export default function ListPage() {
   const router = useRouter()
@@ -25,44 +21,35 @@ export default function ListPage() {
 }
 
 function ListPageContent({ id }: { id: string }) {
-  const { lists } = useContext(ListsContext)
-  const list = lists.find((l) => l.id === id) ?? null
+  const { list, change } = useList(id)
 
   if (!list) {
-    return <div className="">Loading...</div>
+    return <div className="">Null list...</div>
   }
 
-  return <ListPageContentWithList list={list} />
+  return <ListPageContentWithList list={list} change={change} />
 }
 
-function useList(list: ListType) {
-  return {
-    edit: (changes: ListChangesetType) => Lists.changeAndSave(list, changes),
-    item: {
-      add: (data: ListItemChangesetType) => Lists.Items.addAndSave(list, data),
-      remove: (itemId: string) => Lists.Items.removeAndSave(list, itemId),
-      edit: (itemId: string, changes: ListItemChangesetType) =>
-        Lists.Items.changeAndSave(list, itemId, changes),
-    },
-  }
-}
-
-function ListPageContentWithList({ list }) {
-  const { edit: listEdit, item: listItem } = useList(list)
+function ListPageContentWithList({
+  list,
+  change,
+}: {
+  list: ListType
+  change: UseList['change']
+}) {
   const [showAddItemModal, setShowAddItemModal] = useState(false)
-  const [showEditItemModal, setShowEditItemModal] = useState(false)
-  const [editItemId, setEditItemId] = useState('')
   const [showEditListModal, setShowEditListModal] = useState(false)
 
-  const handleEditItemModal = {
-    open: (itemId: string) => {
-      setShowEditItemModal(true)
-      setEditItemId(itemId)
-    },
-    close: () => {
-      setShowEditItemModal(false)
-      setEditItemId('')
-    },
+  const addItem = ({ value }) => {
+    change((list) => {
+      list.items.push({ id: uuid(), value })
+    })
+  }
+
+  const editList = ({ name }) => {
+    change((list) => {
+      list.name = name
+    })
   }
 
   return (
@@ -83,29 +70,9 @@ function ListPageContentWithList({ list }) {
       </header>
       <main className="flex flex-col items-center">
         <div className="divide-y">
-          {list && list.items.length > 0
+          {list.items.length > 0
             ? list.items.map((item) => (
-                <div key={item.id} className="w-screen items-center py-2 px-4">
-                  <div className="flex justify-between">
-                    <div className="mr-4 flex items-center">{item.value}</div>
-                    <div className="flex space-x-4">
-                      <Button
-                        onClick={() => handleEditItemModal.open(item.id)}
-                        bgColor="bg-blue-500"
-                        bgHoverColor="bg-blue-600"
-                      >
-                        <Edit2 />
-                      </Button>
-                      <Button
-                        onClick={() => listItem.remove(item.id)}
-                        bgColor="bg-green-500"
-                        bgHoverColor="bg-green-600"
-                      >
-                        <Check />
-                      </Button>
-                    </div>
-                  </div>
-                </div>
+                <Item key={item.id} item={item} changeList={change} />
               ))
             : 'no items'}
         </div>
@@ -113,24 +80,18 @@ function ListPageContentWithList({ list }) {
           <Button onClick={() => setShowAddItemModal(true)}>Add Item</Button>
         </div>
         {showAddItemModal && (
-          <AddItemModal
-            addItem={listItem.add}
+          <ItemModal
+            initialValue=""
+            placeholder="new item..."
             close={() => setShowAddItemModal(false)}
-          />
-        )}
-        {showEditItemModal && (
-          <EditItemModal
-            list={list}
-            editItem={listItem.edit}
-            close={handleEditItemModal.close}
-            itemId={editItemId}
+            save={({ value }) => addItem({ value })}
           />
         )}
         {showEditListModal && (
-          <EditListModal
+          <ListModal
             list={list}
-            editList={listEdit}
             close={() => setShowEditListModal(false)}
+            save={({ name }) => editList({ name })}
           />
         )}
       </main>
@@ -138,58 +99,110 @@ function ListPageContentWithList({ list }) {
   )
 }
 
-interface EditListModalParams {
-  list: ListType
-  editList: (change: ListChangesetType) => void
-  close: () => void
+interface ItemProps {
+  item: ListType['items'][number]
+  changeList: UseList['change']
 }
 
-export function EditListModal({ list, editList, close }: EditListModalParams) {
-  const [input, setInput] = useState<string>(list?.name || '')
+function Item({ item, changeList }: ItemProps) {
+  const [showEditModal, setShowEditModal] = useState(false)
 
-  const handleEditList = () => {
-    editList({ name: input })
+  const remove = () => {
+    changeList((list) => {
+      const index = list.items.findIndex((i) => i.id === item.id)
+      if (index > -1) list.items.splice(index, 1)
+    })
+  }
+
+  const edit = ({ value }) => {
+    changeList((list) => {
+      const index = list.items.findIndex((i) => i.id === item.id)
+      if (index > -1) {
+        if (value) {
+          list.items[index].value = value
+        }
+      }
+    })
+  }
+
+  return (
+    <div key={item.id} className="w-screen items-center py-2 px-4">
+      <div className="flex justify-between">
+        <div className="mr-4 flex items-center">{item.value}</div>
+        <div className="flex space-x-4">
+          <Button
+            onClick={() => setShowEditModal(true)}
+            bgColor="bg-blue-500"
+            bgHoverColor="bg-blue-600"
+          >
+            <Edit2 />
+          </Button>
+          <Button
+            onClick={remove}
+            bgColor="bg-green-500"
+            bgHoverColor="bg-green-600"
+          >
+            <Check />
+          </Button>
+        </div>
+      </div>
+      {showEditModal && (
+        <ItemModal
+          initialValue={item.value}
+          placeholder="item value..."
+          close={() => setShowEditModal(false)}
+          save={({ value }) => edit({ value })}
+        />
+      )}
+    </div>
+  )
+}
+
+interface ItemModalProps {
+  initialValue: string
+  placeholder: string
+  close: () => void
+  save: (v: { value: string }) => void
+}
+
+function ItemModal({ initialValue, placeholder, close, save }: ItemModalProps) {
+  const [value, setValue] = useState(initialValue)
+
+  const handleSave = () => {
+    save({ value })
     close()
   }
 
   return (
     <MyModal close={close}>
-      <div className="space-y-2">
-        <div className="">Copy Link to Share</div>
-        <div className="">{window?.location?.href || ''}</div>
-      </div>
       <InputText
-        value={input}
-        placeholder="new item"
-        onChange={(e) => setInput(e.target.value)}
+        value={value}
+        placeholder={placeholder}
+        onChange={(e) => setValue(e.target.value)}
         autoFocus={true}
       />
-      <Button onClick={handleEditList}>Save</Button>
+      <Button onClick={handleSave}>Save</Button>
     </MyModal>
   )
 }
 
-interface AddItemModalParams {
-  addItem: (x: ListItemChangesetType) => void
-  close: () => void
-}
-export function AddItemModal({ addItem, close }: AddItemModalParams) {
-  const [input, setInput] = useState<string>('')
+function ListModal({ list, close, save }) {
+  const [name, setName] = useState(list.name)
 
-  const handleAddItem = () => {
-    addItem({ value: input })
+  const handleSave = () => {
+    save({ name })
     close()
   }
 
   return (
     <MyModal close={close}>
       <InputText
-        value={input}
-        placeholder="new item"
-        onChange={(e) => setInput(e.target.value)}
+        value={name}
+        placeholder="list name..."
+        onChange={(e) => setName(e.target.value)}
         autoFocus={true}
       />
-      <Button onClick={handleAddItem}>Save</Button>
+      <Button onClick={handleSave}>Save</Button>
     </MyModal>
   )
 }
@@ -201,35 +214,5 @@ function MyModal({ close, children }) {
         {children}
       </div>
     </Modal>
-  )
-}
-
-interface EditItemModalParams {
-  list: ListType
-  itemId: string
-  editItem: (itemId: string, changes: ListItemChangesetType) => void
-  close: () => void
-}
-function EditItemModal({ list, editItem, close, itemId }: EditItemModalParams) {
-  const item = list.items.find((i) => i.id === itemId)
-  const [input, setInput] = useState<string>(item?.value || '')
-
-  if (!item) return null
-
-  const handleEditItem = () => {
-    editItem(item.id, { value: input })
-    close()
-  }
-
-  return (
-    <MyModal close={close}>
-      <InputText
-        value={input}
-        placeholder="new item"
-        onChange={(e) => setInput(e.target.value)}
-        autoFocus={true}
-      />
-      <Button onClick={handleEditItem}>Save</Button>
-    </MyModal>
   )
 }
