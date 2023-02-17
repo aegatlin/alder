@@ -1,3 +1,5 @@
+export {}
+
 // export interface NetworkMessage {
 //   id: string
 //   bin: Uint8Array
