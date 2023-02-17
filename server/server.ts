@@ -1,8 +1,13 @@
 import { buildRedisService } from './services/Redis'
 import { Utility } from './services/Utility'
 
-const connectionString =
-  process.env.REDIS_CONNECTION_STRING || 'redis://localhost:6379'
+if (!process.env.REDIS_CONNECTION_STRING) {
+  throw 'no redis connection string'
+}
+
+
+const connectionString = process.env.REDIS_CONNECTION_STRING
+console.log('!!!!!!!!!!!!!!!!!!!!!!1', connectionString)
 
 export const redis = buildRedisService({
   connectionString,
