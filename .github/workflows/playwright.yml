@@ -8,6 +8,7 @@ jobs:
   test:
     env:
       UPSTASH_REDIS_PASSWORD: ${{ secrets.UPSTASH_REDIS_PASSWORD }}
+      REDIS_CONNECTION_STRING: ${{ secrets.REDIS_CONNECTION_STRING }}
     timeout-minutes: 60
     runs-on: ubuntu-latest
     steps:

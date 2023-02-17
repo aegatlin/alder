@@ -1,13 +1,15 @@
 import { Check, Edit2, Home } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/router'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { v4 as uuid } from 'uuid'
 import { Button } from '../../client/core/Button'
 import { InputText } from '../../client/core/InputText'
 import { Modal } from '../../client/core/Modal'
+import { para } from '../../client/para'
 import { ListType } from '../../client/types'
 import { UseList, useList } from '../../client/useList'
+import { useListIds } from '../../client/useListIds'
 
 export default function ListPage() {
   const router = useRouter()
@@ -21,33 +23,37 @@ export default function ListPage() {
 }
 
 function ListPageContent({ id }: { id: string }) {
-  const { list, change } = useList(id)
+  const { ensure } = useListIds()
+  useEffect(() => {
+    ensure(id)
+  })
+  const { list, update } = useList(id)
 
   if (!list) {
     return <div className="">Null list...</div>
   }
 
-  return <ListPageContentWithList list={list} change={change} />
+  return <ListPageContentWithList list={list} update={update} />
 }
 
 function ListPageContentWithList({
   list,
-  change,
+  update,
 }: {
   list: ListType
-  change: UseList['change']
+  update: UseList['update']
 }) {
   const [showAddItemModal, setShowAddItemModal] = useState(false)
   const [showEditListModal, setShowEditListModal] = useState(false)
 
   const addItem = ({ value }) => {
-    change((list) => {
+    update((list) => {
       list.items.push({ id: uuid(), value })
     })
   }
 
   const editList = ({ name }) => {
-    change((list) => {
+    update((list) => {
       list.name = name
     })
   }
@@ -72,7 +78,7 @@ function ListPageContentWithList({
         <div className="divide-y">
           {list.items.length > 0
             ? list.items.map((item) => (
-                <Item key={item.id} item={item} changeList={change} />
+                <Item key={item.id} item={item} changeList={update} />
               ))
             : 'no items'}
         </div>
@@ -101,7 +107,7 @@ function ListPageContentWithList({
 
 interface ItemProps {
   item: ListType['items'][number]
-  changeList: UseList['change']
+  changeList: UseList['update']
 }
 
 function Item({ item, changeList }: ItemProps) {

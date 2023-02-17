@@ -1,5 +1,5 @@
 import test, { expect } from '@playwright/test'
-import { Utility } from '../../server/namespaces/Utility'
+import { Utility } from '../../server/services/Utility'
 
 test('bin utils can transform between nodejs Buffer and uint8array', () => {
   const u = Uint8Array.from([0, 1, 2])

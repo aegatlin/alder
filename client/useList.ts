@@ -1,30 +1,19 @@
-import { useEffect, useState } from 'react'
-import { igi } from './igi'
+import { para } from './para'
 import { ListType } from './types'
+import { useParaDoc } from './useParaDoc'
 
 export interface UseList {
   list: ListType | null
-  change: (changer: (list: ListType) => void) => void
+  update(onUpdate: (list: ListType) => void): void
 }
 
 export function useList(id: string): UseList {
-  const [list, setList] = useState(() => igi.docs.get<ListType>(id))
+  const { doc: list } = useParaDoc<ListType>(id)
 
-  useEffect(() => {
-    const listenerId = igi.docs.listeners.add<ListType>(id, (newList) => {
-      setList(newList)
-    })
-
-    return () => {
-      igi.docs.listeners.remove(id, listenerId)
-    }
-  }, [id])
-
-  function change(changer: (list: ListType) => void) {
-    igi.docs.change<ListType>(id, (list) => {
-      changer(list)
-    })
+  return {
+    list,
+    update(onUpdate: (list: ListType) => void) {
+      para.docs.update<ListType>(id, onUpdate)
+    },
   }
-
-  return { list, change }
 }

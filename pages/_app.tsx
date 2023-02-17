@@ -1,7 +1,6 @@
 import Head from 'next/head'
 import Script from 'next/script'
 import '../client/styles.css'
-import '../client/igi'
 
 function App({ Component, pageProps }) {
   return (

@@ -1,11 +1,20 @@
-## API
+# alder
 
-`/docs/[id]`: GET and POST, works for any automerge doc
+## Setup
 
-## Thinking out loud
+This app uses Upstash Redis.
 
-Will eventually have p2p communication, preferably through webrtc, and websockets for servers (though edge runtimes with web apis support could eventually allow for servers to also be webrtc peers that are always connectable.)
+To setup local redis for local dev and testing, on macos:
 
-There is the ListDoc, and sharing that list between peers will require communication. Some cloud storage will be required to store peer-connection information. This can be initiated by visiting the uuid-based url. E.g., `uuid-users` could be a list of users or an amdoc. The amdoc could just contain a list of users. But what "is" a user? It can't be a peer id because that is transient.
+```sh
+brew install redis
+# This next comment is automatic, but in case something goes wrong...
+# brew services start redis
+echo "REDIS_CONNECTION_STRING=redis://localhost:6379">>./.env
+```
 
-ID per device, saved to redis. ID is associated with webrtc connection details, e.g., peerjs id, saved to redis as well. device visits list, gets list users and users webrtc connection details, connects to each user.
+## Captain's Log
+
+### Para
+
+- (02/23) I removed id generation from `para.docs.create` because I began to doubt the legitimacy of taking away that control from the user.
