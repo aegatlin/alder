@@ -6,11 +6,18 @@ on:
     branches: main
 jobs:
   test:
-    env:
-      UPSTASH_REDIS_PASSWORD: ${{ secrets.UPSTASH_REDIS_PASSWORD }}
-      REDIS_CONNECTION_STRING: ${{ secrets.REDIS_CONNECTION_STRING }}
-    timeout-minutes: 60
     runs-on: ubuntu-latest
+    timeout-minutes: 60
+    services:
+      redis:
+        image: redis
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      REDIS_CONNECTION_STRING: "redis://redis:6379"
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3

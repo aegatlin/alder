@@ -6,8 +6,11 @@ let id: string
 let redis: RedisService
 
 test.beforeAll(() => {
+  const connectionString = process.env.REDIS_CONNECTION_STRING
   redis = buildRedisService({
-    connectionString: 'redis://localhost:6379',
+    connectionString: connectionString
+      ? connectionString
+      : 'redis://localhost:6379',
   })
 })
 
