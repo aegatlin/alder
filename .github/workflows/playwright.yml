@@ -24,8 +24,8 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 16
-      - run: list -al .git
-      - run: list -al .git/hooks
+      - run: ls -al .git
+      - run: ls -al .git/hooks
       - name: Install dependencies
         run: npm ci
       - name: Install Playwright Browsers
