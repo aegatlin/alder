@@ -27,6 +27,8 @@ jobs:
       - run: whoami
       - run: ls -al .git
       - run: ls -al .git/hooks
+      - run: ls -al ./.git/hooks
+      - run: touch ./.git/hooks/anything
       - name: Install dependencies
         run: npm ci
       - name: Install Playwright Browsers
