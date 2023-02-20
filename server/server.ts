@@ -6,7 +6,6 @@ if (!process.env.REDIS_CONNECTION_STRING) {
 }
 
 const connectionString = process.env.REDIS_CONNECTION_STRING
-console.log('!!!!!!!!!!!!!!!!!!!!!!1', connectionString)
 
 export const redis = buildRedisService({
   connectionString,
